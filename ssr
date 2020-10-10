@@ -1,0 +1,42 @@
+#!/bin/bash
+
+x=`dig @1.1.1.1 A,CNAME {test321123,testingforwildcard,plsdontgimmearesult}.$1 +short | wc -l`
+
+if [ $x -gt 0 ]
+then
+    echo Wildcard configuration enabled
+else
+    echo [*]Bruteforcing
+    sed "s/$/.$1/" /home/ubuntu/wordlists/SecLists/Discovery/DNS/dns-Jhaddix.txt >> bruteforced_list
+    cat bruteforced_list | massdns -r /home/ubuntu/wordlists/50resolvers.txt -t A -o S | cut -d " " -f 1 | sed 's/.$//' | tee -a bruteforce_resolved
+    # rm bruteforced_list
+    cat bruteforce_resolved | httpx | sed 's/https\?:\/\///' | tee -a $1_bruteforce_subdomains
+    # rm bruteforce_resolved
+fi
+
+echo [*]Dont forget to spider with burp
+
+echo [*]Running crtrslvrs
+crtrslvrs
+echo [*]Running amass
+amass enum -passive -d $1 -rf /home/ubuntu/wordlists/50resolvers.txt -timeout 12 -o $1_amass_subdomains
+echo [*]Running subfinder
+subfinder -rL /home/ubuntu/wordlists/50resolvers.txt -o $1_subfinder_subdomains -t 50 -d $1
+echo [*]Running sublister
+sublister -d $1 -o $1_sublister_subdomains
+echo [*]Sorting all to all.txt
+for i in `ls | grep .*_subdomains`;do cat $i >> all.tmp;done
+cat all.tmp | sort -u >> all.txt
+echo [*]Running dnsgen
+dnsgen all.txt -f -w ~/wordlists/SecLists/Discovery/DNS/subdomains-top1million-5000.txt | sort -u | tee -a dnsgen_subdomains
+echo [*]Resolving dnsgen output
+cat dnsgen_subdomains | massdns  -r ~/wordlists/50resolvers.txt -t A -o S | tee -a massdns-output
+# rm dnsgen_subdomains
+
+cat massdns-output | cut -d " " -f 1 | sed 's/.$//' |tee -a subdomains.tmp
+cat all.txt >> subdomains.tmp
+cat subdomains.tmp | sort -u | subdomains.sorted
+# rm subdomains.tmp
+cat subdomains.sorted | httpx -silent | live.http
+# rm subdomains.sorted
+cat live.http | sed 's/https\?:\/\///' | live.txt
