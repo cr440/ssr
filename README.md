@@ -1,2 +1,2 @@
 # ssr
-Recon scopes like *.target.com
+Recon scopes like *.target.com 
