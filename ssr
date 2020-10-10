@@ -16,8 +16,6 @@ fi
 
 echo [*]Dont forget to spider with burp
 
-echo [*]Running crtrslvrs
-crtrslvrs
 echo [*]Running amass
 amass enum -passive -d $1 -rf /home/ubuntu/wordlists/50resolvers.txt -timeout 12 -o $1_amass_subdomains
 echo [*]Running subfinder
