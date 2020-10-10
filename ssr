@@ -35,8 +35,8 @@ cat dnsgen_subdomains | massdns  -r ~/wordlists/50resolvers.txt -t A -o S | tee 
 
 cat massdns-output | cut -d " " -f 1 | sed 's/.$//' |tee -a subdomains.tmp
 cat all.txt >> subdomains.tmp
-cat subdomains.tmp | sort -u | subdomains.sorted
+cat subdomains.tmp | sort -u |tee -a subdomains.sorted
 # rm subdomains.tmp
-cat subdomains.sorted | httpx -silent | live.http
+cat subdomains.sorted | httpx -silent | tee -a live.http
 # rm subdomains.sorted
-cat live.http | sed 's/https\?:\/\///' | live.txt
+cat live.http | sed 's/https\?:\/\///' | tee -a live.txt
