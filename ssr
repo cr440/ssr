@@ -7,7 +7,7 @@ then
     echo Wildcard configuration enabled
 else
     echo [*]Bruteforcing
-    sed "s/$/.$1/" /home/ubuntu/wordlists/SecLists/Discovery/DNS/dns-Jhaddix.txt >> bruteforced_list
+    sed "s/$/.$1/" /home/ubuntu/wordlists/SecLists/Discovery/DNS/shubs-subdomains.txt >> bruteforced_list
     cat bruteforced_list | massdns -r /home/ubuntu/wordlists/50resolvers.txt -t A -o S | cut -d " " -f 1 | sed 's/.$//' | tee -a bruteforce_resolved
     # rm bruteforced_list
     cat bruteforce_resolved | httpx | sed 's/https\?:\/\///' | tee -a $1_bruteforce_subdomains
