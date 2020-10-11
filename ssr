@@ -8,7 +8,7 @@ then
 else
     echo [*]Bruteforcing
     sed "s/$/.$1/" /home/ubuntu/wordlists/SecLists/Discovery/DNS/shubs-subdomains.txt >> bruteforced_list
-    cat bruteforced_list | massdns -r /home/ubuntu/wordlists/50resolvers.txt -t A -o S | cut -d " " -f 1 | sed 's/.$//' | tee -a bruteforce_resolved
+    cat bruteforced_list | massdns -q -r /home/ubuntu/wordlists/50resolvers.txt -t A -o S | cut -d " " -f 1 | sed 's/.$//' | tee -a bruteforce_resolved
     # rm bruteforced_list
     cat bruteforce_resolved | httpx | sed 's/https\?:\/\///' | tee -a $1_bruteforce_subdomains
     # rm bruteforce_resolved
@@ -28,7 +28,7 @@ cat all.tmp | sort -u >> all.txt
 echo [*]Running dnsgen
 dnsgen all.txt -f -w ~/wordlists/SecLists/Discovery/DNS/subdomains-top1million-5000.txt | sort -u | tee -a dnsgen_subdomains
 echo [*]Resolving dnsgen output
-cat dnsgen_subdomains | massdns  -r ~/wordlists/50resolvers.txt -t A -o S | tee -a massdns-output
+cat dnsgen_subdomains | massdns -q -r ~/wordlists/50resolvers.txt -t A -o S | tee -a massdns-output
 # rm dnsgen_subdomains
 
 cat massdns-output | cut -d " " -f 1 | sed 's/.$//' |tee -a subdomains.tmp
