@@ -18,13 +18,21 @@ echo [*]Dont forget to spider with burp
 
 echo [*]Running amass
 amass enum -passive -d $1 -rf /home/ubuntu/wordlists/50resolvers.txt -timeout 12 -o $1_amass_subdomains
-echo [*]Running subfinder
-subfinder -rL /home/ubuntu/wordlists/50resolvers.txt -o $1_subfinder_subdomains -t 50 -d $1
+
 echo [*]Running sublister
 sublister -d $1 -o $1_sublister_subdomains
+
+# copy all subdomains to subfinderinput . For using as input for subfinder  
+for i in `ls | grep .*_subdomains`;do cat $i >> all.tmp;done
+cat all.tmp | sort -u >> subfinderinput
+rm all.tmp
+subfinder -rL /home/ubuntu/wordlists/50resolvers.txt -o subfinder_subdomains -t 100 -dL subfinderinput -timeout 10 -silent
+rm subfinderinput
+
 echo [*]Sorting all to all.txt
 for i in `ls | grep .*_subdomains`;do cat $i >> all.tmp;done
 cat all.tmp | sort -u >> all.txt
+
 echo [*]Running dnsgen
 dnsgen all.txt -f -w ~/wordlists/SecLists/Discovery/DNS/subdomains-top1million-5000.txt | sort -u | tee -a dnsgen_subdomains
 echo [*]Resolving dnsgen output
@@ -33,6 +41,7 @@ cat dnsgen_subdomains | massdns -q -r ~/wordlists/50resolvers.txt -t A -o S | te
 
 cat massdns-output | cut -d " " -f 1 | sed 's/.$//' |tee -a subdomains.tmp
 cat all.txt >> subdomains.tmp
+# rm all.txt
 cat subdomains.tmp | sort -u |tee -a subdomains.sorted
 # rm subdomains.tmp
 cat subdomains.sorted | httpx -silent | tee -a live.http
