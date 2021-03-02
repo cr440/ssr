@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Webhook for general channel
+url='https://discordapp.com/api/webhooks/816157709757186058/L9-TZsyFekd-4X-TTf4vz8P8IN678bsfpLwO0BkyszBK7MPICqvN14t0ZD1gnUkctYwR'
 echo [*] Starting Hunt...
 
 #mkdir $1
@@ -24,26 +26,22 @@ echo [*]Dont forget to spider with burp ****************************************
 echo [*]Running github **************************************************************************************
 python3 /home/ubuntu/Tools/github-search/github-subdomains.py -d $1 | tee -a $1_github_subdomains
 message="$1 - Github Finnished "
-url='https://discordapp.com/api/webhooks/774994556788801546/JGuo9Gm2nhTPF2rxD3cNqjDTeS8-6Em64n6QMQy3RdEJymzXXwFqDhyKmkhYE8Vz7lRd'
-curl -H "Content-Type: application/json" -X POST -d "{\"content\": $msg_content}" $url
+curl -H "Content-Type: application/json" -X POST -d "{\"content\": \"$message\"}" $url
 
 echo [*]Running amass ***************************************************************************************
 amass enum -passive -d $1 -rf /home/ubuntu/Wordlists/50resolvers.txt -timeout 12 -o $1_amass_subdomains
 message="$1 - Amass Finnished "
-url='https://discordapp.com/api/webhooks/774994556788801546/JGuo9Gm2nhTPF2rxD3cNqjDTeS8-6Em64n6QMQy3RdEJymzXXwFqDhyKmkhYE8Vz7lRd'
-curl -H "Content-Type: application/json" -X POST -d "{\"content\": $msg_content}" $url
+curl -H "Content-Type: application/json" -X POST -d "{\"content\": \"$message\"}" $url
 
 echo [*]Running subfinder *************************************************************************************************
 subfinder -rL /home/ubuntu/Wordlists/50resolvers.txt -o $1_subfinder_subdomains -t 50 -d $1
 message="$1 - Subfinder Finnished "
-url='https://discordapp.com/api/webhooks/774994556788801546/JGuo9Gm2nhTPF2rxD3cNqjDTeS8-6Em64n6QMQy3RdEJymzXXwFqDhyKmkhYE8Vz7lRd'
-curl -H "Content-Type: application/json" -X POST -d "{\"content\": $msg_content}" $url
+curl -H "Content-Type: application/json" -X POST -d "{\"content\": \"$message\"}" $url
 
 echo [*]Running sublister **************************************************************************************************
 python3 /home/ubuntu/Tools/Sublist3r/sublist3r.py -d $1 -o $1_sublister_subdomains
 message="$1 - Sublister Finnished "
-url='https://discordapp.com/api/webhooks/774994556788801546/JGuo9Gm2nhTPF2rxD3cNqjDTeS8-6Em64n6QMQy3RdEJymzXXwFqDhyKmkhYE8Vz7lRd'
-curl -H "Content-Type: application/json" -X POST -d "{\"content\": $msg_content}" $url
+curl -H "Content-Type: application/json" -X POST -d "{\"content\": \"$message\"}" $url
 
 echo [*]Sorting all to all.txt *********************************************************************************************
 for i in `ls | grep .*_subdomains`;do cat $i >> all.tmp;done
@@ -56,8 +54,7 @@ dnsgen all.txt -f >> dnsgen_tmp
 #dnsgen all.txt -f -w ~/Wordlists/SecLists/Discovery/DNS/deepmagic.com-prefixes-top500.txt >> dnsgen_tmp
 cat dnsgen_tmp| sort -u | tee -a dnsgen_subdomains
 message="$1 - Dnsgen Finnished "
-url='https://discordapp.com/api/webhooks/774994556788801546/JGuo9Gm2nhTPF2rxD3cNqjDTeS8-6Em64n6QMQy3RdEJymzXXwFqDhyKmkhYE8Vz7lRd'
-curl -H "Content-Type: application/json" -X POST -d "{\"content\": $msg_content}" $url
+curl -H "Content-Type: application/json" -X POST -d "{\"content\": \"$message\"}" $url
 rm dnsgen_tmp
 fi
 
@@ -65,8 +62,7 @@ echo [*]Resolving dnsgen output ************************************************
 #cat dnsgen_subdomains | massdns -q -r /home/ubuntu/Wordlists/50resolvers.txt -t A -o S | tee -a massdns-output
 cat dnsgen_subdomains | dnsx -silent -r /home/ubuntu/Wordlists/50resolvers.txt -a -aaaa | tee -a dnsx-output
 message="$1 - Dnsx Finnished *****"
-url='https://discordapp.com/api/webhooks/774994556788801546/JGuo9Gm2nhTPF2rxD3cNqjDTeS8-6Em64n6QMQy3RdEJymzXXwFqDhyKmkhYE8Vz7lRd'
-curl -H "Content-Type: application/json" -X POST -d "{\"content\": $msg_content}" $url
+curl -H "Content-Type: application/json" -X POST -d "{\"content\": \"$message\"}" $url
 rm dnsgen_subdomains
 
 cat dnsx-output | cut -d " " -f 1 | sed 's/.$//' |tee -a subdomains.tmp
@@ -77,8 +73,7 @@ cat subdomains.tmp | sort -u |tee -a subdomains.sorted
 #cat all.txt | httpx -title -content-length -status-code -ip -silent | tee -a live.http
 cat subdomains.sorted | httpx -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4392.0 Safari/537.36 autochrome/blue autochrome/blue' -title -content-length -status-code -ip -silent | tee -a live.httpx
 message="$1 - Httpx Finnished *****"
-url='https://discordapp.com/api/webhooks/774994556788801546/JGuo9Gm2nhTPF2rxD3cNqjDTeS8-6Em64n6QMQy3RdEJymzXXwFqDhyKmkhYE8Vz7lRd'
-curl -H "Content-Type: application/json" -X POST -d "{\"content\": $msg_content}" $url
+curl -H "Content-Type: application/json" -X POST -d "{\"content\": \"$message\"}" $url
 rm subdomains.sorted
 
 cat live.httpx | cut -d " " -f 1 | tee -a  live.http
