@@ -52,7 +52,7 @@ then
 echo [*]Running dnsgen  ********************************************************************************************************
 dnsgen all.txt -f >> dnsgen_tmp
 #dnsgen all.txt -f -w ~/Wordlists/SecLists/Discovery/DNS/deepmagic.com-prefixes-top500.txt >> dnsgen_tmp
-cat dnsgen_tmp| sort -u | tee -a dnsgen_subdomains
+cat dnsgen_tmp | sort -u | tee -a dnsgen_subdomains
 message="$1 - Dnsgen Finnished "
 curl -H "Content-Type: application/json" -X POST -d "{\"content\": \"$message\"}" $url
 rm dnsgen_tmp
@@ -65,7 +65,8 @@ message="$1 - Dnsx Finnished *****"
 curl -H "Content-Type: application/json" -X POST -d "{\"content\": \"$message\"}" $url
 rm dnsgen_subdomains
 
-cat dnsx-output | cut -d " " -f 1 | sed 's/.$//' |tee -a subdomains.tmp
+#cat dnsx-output | cut -d " " -f 1 | sed 's/.$//' |tee -a subdomains.tmp
+cat dnsx-output > subdomains.tmp
 cat all.txt >> subdomains.tmp
 cat subdomains.tmp | sort -u |tee -a subdomains.sorted
  rm subdomains.tmp
