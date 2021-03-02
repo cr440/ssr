@@ -1,49 +1,87 @@
 #!/bin/bash
 
+echo [*] Starting Hunt...
+
+#mkdir $1
+#cd $1
+echo `pwd`
+
 x=`dig @1.1.1.1 A,CNAME {test321123,testingforwildcard,plsdontgimmearesult}.$1 +short | wc -l`
 
-if [ $x -gt 0 ]
-then
-    echo Wildcard configuration enabled
-else
-    echo [*]Bruteforcing
-    sed "s/$/.$1/" /home/ubuntu/wordlists/SecLists/Discovery/DNS/shubs-subdomains.txt >> bruteforced_list
-    cat bruteforced_list | massdns -q -r /home/ubuntu/wordlists/50resolvers.txt -t A -o S | cut -d " " -f 1 | sed 's/.$//' | tee -a bruteforce_resolved
-    # rm bruteforced_list
-    cat bruteforce_resolved | httpx | sed 's/https\?:\/\///' | tee -a $1_bruteforce_subdomains
-    # rm bruteforce_resolved
-fi
+#if [ $x -gt 0 ]
+#then
+#    echo Wildcard configuration enabled @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#else
+#    echo [*]Bruteforcing *********************************************************************************************
+#    sed "s/$/.$1/" /home/ubuntu/Wordlists/SecLists/Discovery/DNS/shubs-subdomains.txt >> bruteforced_list
+#    cat bruteforced_list | massdns -q -r /home/ubuntu/Wordlists/50resolvers.txt -t A -o S | cut -d " " -f 1 | sed 's/.$//' | tee -a bruteforce_resolved
+#    rm bruteforced_list
+#    cat bruteforce_resolved | httpx | sed 's/https\?:\/\///' | tee -a $1_bruteforce_subdomains
+#    # rm bruteforce_resolved
+#fi
 
-echo [*]Dont forget to spider with burp
+echo [*]Dont forget to spider with burp *********************************************************************
+echo [*]Running github **************************************************************************************
+python3 /home/ubuntu/Tools/github-search/github-subdomains.py -d $1 | tee -a $1_github_subdomains
+message="$1 - Github Finnished "
+url='https://discordapp.com/api/webhooks/774994556788801546/JGuo9Gm2nhTPF2rxD3cNqjDTeS8-6Em64n6QMQy3RdEJymzXXwFqDhyKmkhYE8Vz7lRd'
+curl -H "Content-Type: application/json" -X POST -d "{\"content\": $msg_content}" $url
 
-echo [*]Running amass
-amass enum -passive -d $1 -rf /home/ubuntu/wordlists/50resolvers.txt -timeout 12 -o $1_amass_subdomains
+echo [*]Running amass ***************************************************************************************
+amass enum -passive -d $1 -rf /home/ubuntu/Wordlists/50resolvers.txt -timeout 12 -o $1_amass_subdomains
+message="$1 - Amass Finnished "
+url='https://discordapp.com/api/webhooks/774994556788801546/JGuo9Gm2nhTPF2rxD3cNqjDTeS8-6Em64n6QMQy3RdEJymzXXwFqDhyKmkhYE8Vz7lRd'
+curl -H "Content-Type: application/json" -X POST -d "{\"content\": $msg_content}" $url
 
-echo [*]Running sublister
-sublister -d $1 -o $1_sublister_subdomains
+echo [*]Running subfinder *************************************************************************************************
+subfinder -rL /home/ubuntu/Wordlists/50resolvers.txt -o $1_subfinder_subdomains -t 50 -d $1
+message="$1 - Subfinder Finnished "
+url='https://discordapp.com/api/webhooks/774994556788801546/JGuo9Gm2nhTPF2rxD3cNqjDTeS8-6Em64n6QMQy3RdEJymzXXwFqDhyKmkhYE8Vz7lRd'
+curl -H "Content-Type: application/json" -X POST -d "{\"content\": $msg_content}" $url
 
-# copy all subdomains to subfinderinput . For using as input for subfinder  
-for i in `ls | grep .*_subdomains`;do cat $i >> all.tmp;done
-cat all.tmp | sort -u >> subfinderinput
-rm all.tmp
-subfinder -rL /home/ubuntu/wordlists/50resolvers.txt -o subfinder_subdomains -t 100 -dL subfinderinput -timeout 10 -silent
-rm subfinderinput
+echo [*]Running sublister **************************************************************************************************
+python3 /home/ubuntu/Tools/Sublist3r/sublist3r.py -d $1 -o $1_sublister_subdomains
+message="$1 - Sublister Finnished "
+url='https://discordapp.com/api/webhooks/774994556788801546/JGuo9Gm2nhTPF2rxD3cNqjDTeS8-6Em64n6QMQy3RdEJymzXXwFqDhyKmkhYE8Vz7lRd'
+curl -H "Content-Type: application/json" -X POST -d "{\"content\": $msg_content}" $url
 
-echo [*]Sorting all to all.txt
+echo [*]Sorting all to all.txt *********************************************************************************************
 for i in `ls | grep .*_subdomains`;do cat $i >> all.tmp;done
 cat all.tmp | sort -u >> all.txt
 
-echo [*]Running dnsgen
-dnsgen all.txt -f -w ~/wordlists/SecLists/Discovery/DNS/subdomains-top1million-5000.txt | sort -u | tee -a dnsgen_subdomains
-echo [*]Resolving dnsgen output
-cat dnsgen_subdomains | massdns -q -r ~/wordlists/50resolvers.txt -t A -o S | tee -a massdns-output
-# rm dnsgen_subdomains
+if [ $x -gt 0 ]
+then
+echo [*]Running dnsgen  ********************************************************************************************************
+dnsgen all.txt -f >> dnsgen_tmp
+#dnsgen all.txt -f -w ~/Wordlists/SecLists/Discovery/DNS/deepmagic.com-prefixes-top500.txt >> dnsgen_tmp
+cat dnsgen_tmp| sort -u | tee -a dnsgen_subdomains
+message="$1 - Dnsgen Finnished "
+url='https://discordapp.com/api/webhooks/774994556788801546/JGuo9Gm2nhTPF2rxD3cNqjDTeS8-6Em64n6QMQy3RdEJymzXXwFqDhyKmkhYE8Vz7lRd'
+curl -H "Content-Type: application/json" -X POST -d "{\"content\": $msg_content}" $url
+rm dnsgen_tmp
+fi
+
+echo [*]Resolving dnsgen output ***************************************************************************************
+cat dnsgen_subdomains | massdns -q -r /home/ubuntu/Wordlists/50resolvers.txt -t A -o S | tee -a massdns-output
+message="$1 - Massdns Finnished *****"
+url='https://discordapp.com/api/webhooks/774994556788801546/JGuo9Gm2nhTPF2rxD3cNqjDTeS8-6Em64n6QMQy3RdEJymzXXwFqDhyKmkhYE8Vz7lRd'
+curl -H "Content-Type: application/json" -X POST -d "{\"content\": $msg_content}" $url
+rm dnsgen_subdomains
 
 cat massdns-output | cut -d " " -f 1 | sed 's/.$//' |tee -a subdomains.tmp
 cat all.txt >> subdomains.tmp
-# rm all.txt
 cat subdomains.tmp | sort -u |tee -a subdomains.sorted
-# rm subdomains.tmp
-cat subdomains.sorted | httpx -silent | tee -a live.http
-# rm subdomains.sorted
+ rm subdomains.tmp
+#cat subdomains.sorted | httpx -silent | tee -a live.http
+#cat all.txt | httpx -title -content-length -status-code -ip -silent | tee -a live.http
+cat subdomains.sorted | httpx -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4392.0 Safari/537.36 autochrome/blue autochrome/blue' -title -content-length -status-code -ip -silent | tee -a live.httpx
+message="$1 - Httpx Finnished *****"
+url='https://discordapp.com/api/webhooks/774994556788801546/JGuo9Gm2nhTPF2rxD3cNqjDTeS8-6Em64n6QMQy3RdEJymzXXwFqDhyKmkhYE8Vz7lRd'
+curl -H "Content-Type: application/json" -X POST -d "{\"content\": $msg_content}" $url
+rm subdomains.sorted
+
+cat live.httpx | cut -d " " -f 1 | tee -a  live.http
 cat live.http | sed 's/https\?:\/\///' | tee -a live.txt
+
+
+echo "clear" > nohup.out
