@@ -62,13 +62,14 @@ rm dnsgen_tmp
 fi
 
 echo [*]Resolving dnsgen output ***************************************************************************************
-cat dnsgen_subdomains | massdns -q -r /home/ubuntu/Wordlists/50resolvers.txt -t A -o S | tee -a massdns-output
-message="$1 - Massdns Finnished *****"
+#cat dnsgen_subdomains | massdns -q -r /home/ubuntu/Wordlists/50resolvers.txt -t A -o S | tee -a massdns-output
+cat dnsgen_subdomains | dnsx -silent -r /home/ubuntu/Wordlists/50resolvers.txt -a -aaaa | tee -a dnsx-output
+message="$1 - Dnsx Finnished *****"
 url='https://discordapp.com/api/webhooks/774994556788801546/JGuo9Gm2nhTPF2rxD3cNqjDTeS8-6Em64n6QMQy3RdEJymzXXwFqDhyKmkhYE8Vz7lRd'
 curl -H "Content-Type: application/json" -X POST -d "{\"content\": $msg_content}" $url
 rm dnsgen_subdomains
 
-cat massdns-output | cut -d " " -f 1 | sed 's/.$//' |tee -a subdomains.tmp
+cat dnsx-output | cut -d " " -f 1 | sed 's/.$//' |tee -a subdomains.tmp
 cat all.txt >> subdomains.tmp
 cat subdomains.tmp | sort -u |tee -a subdomains.sorted
  rm subdomains.tmp
